@@ -53,8 +53,26 @@ export async function POST(request: Request) {
   });
 
   if (!resendResponse.ok) {
+    let providerMessage = "Failed to send appointment request email.";
+
+    try {
+      const errorBody = (await resendResponse.json()) as {
+        message?: string;
+        error?: string;
+        name?: string;
+      };
+
+      providerMessage =
+        errorBody.message ??
+        errorBody.error ??
+        errorBody.name ??
+        providerMessage;
+    } catch {
+      // Keep the fallback message if Resend returns a non-JSON body.
+    }
+
     return NextResponse.json(
-      { message: "Failed to send appointment request email." },
+      { message: providerMessage },
       { status: 502 }
     );
   }
